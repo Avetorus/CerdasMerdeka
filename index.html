@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cerdas Merdeka - Platform Pendidikan</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Custom styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Lighter gray background */
+        }
+        .screen { display: none; }
+        .screen.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        /* Style for modals */
+        .modal {
+            transition: opacity 0.25s ease;
+        }
+        .modal-content {
+             transition: transform 0.25s ease;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- Main Container -->
+    <div id="app-container" class="max-w-6xl mx-auto p-4 md:p-6">
+
+        <!-- ===== LOGIN SCREEN ===== -->
+        <div id="login-screen" class="screen active">
+            <header class="text-center py-6 md:py-10">
+                <div class="bg-blue-600 text-white w-24 h-24 rounded-full mx-auto flex items-center justify-center shadow-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                </div>
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mt-6">Cerdas Merdeka</h1>
+                <p class="text-gray-600 mt-2">Platform Pendidikan untuk Semua</p>
+            </header>
+            
+            <main class="max-w-sm mx-auto bg-white p-6 md:p-8 rounded-xl shadow-md">
+                <h2 class="text-xl font-semibold text-gray-700 mb-6 text-center">Silakan Masuk</h2>
+                <form id="login-form" class="space-y-4">
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-gray-700">Nama Pengguna</label>
+                        <input type="text" id="username" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="contoh: budi.s">
+                    </div>
+                    <div>
+                         <label for="password" class="block text-sm font-medium text-gray-700">Kata Sandi</label>
+                        <input type="password" id="password" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" value="12345">
+                    </div>
+                    <p id="login-error" class="text-red-500 text-sm hidden">Nama pengguna salah.</p>
+                    <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 transition-all">Masuk</button>
+                </form>
+                 <div class="text-xs text-gray-500 mt-4 text-center">
+                    <p>Coba: <b>budi.s</b>, <b>anisa.p</b>, <b>ayah.budi</b>, atau <b>warga.jaya</b></p>
+                    <p>Kata sandi: <b>12345</b></p>
+                </div>
+            </main>
+        </div>
+
+        <!-- ===== MAIN APP SCREEN (Dashboard) ===== -->
+        <div id="app-screen" class="screen">
+            <header class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b-2 border-gray-200 mb-6 gap-4">
+                 <div>
+                    <h1 id="app-title" class="text-2xl md:text-3xl font-bold text-gray-800"></h1>
+                    <p id="user-name" class="text-gray-500"></p>
+                </div>
+                <button onclick="logout()" class="bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 transition-all flex items-center space-x-2 w-full sm:w-auto justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    <span>Keluar</span>
+                </button>
+            </header>
+            <main id="main-content"></main>
+        </div>
+        
+        <!-- ===== MODAL CONTAINER ===== -->
+        <div id="modal-container"></div>
+    </div>
+
+    <!-- ============================ -->
+    <!-- TEMPLATES FOR DYNAMIC CONTENT -->
+    <!-- ============================ -->
+
+    <!-- Back Button Template -->
+    <template id="back-button-template">
+        <button onclick="goBack()" class="mb-4 bg-white text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-100 transition-all flex items-center space-x-2 border border-gray-300">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+            <span>Kembali</span>
+        </button>
+    </template>
+    
+    <!-- Siswa Dashboard -->
+    <template id="siswa-dashboard-template">
+        <div class="fade-in grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2">
+                <div class="p-4 bg-blue-100 border border-blue-200 rounded-lg mb-6">
+                    <h3 class="font-bold text-blue-800" id="welcome-name-siswa"></h3>
+                    <p class="text-blue-700">Terus semangat belajar, ya!</p>
+                </div>
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold mb-4">Tugas</h2>
+                    <div id="assignment-list-siswa" class="space-y-3">
+                         <p class="text-gray-500">Tidak ada tugas baru saat ini.</p>
+                    </div>
+                </div>
+                <h2 class="text-xl font-semibold mb-4">Mata Pelajaran</h2>
+                <div id="subject-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+            </div>
+            <div class="lg:col-span-1">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-semibold mb-4">Papan Peringkat</h3>
+                    <div id="leaderboard" class="space-y-3"></div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Guru Dashboard -->
+    <template id="guru-dashboard-template">
+         <div class="fade-in">
+             <div class="p-4 bg-green-100 border border-green-200 rounded-lg mb-6">
+                <div>
+                    <h3 class="font-bold text-green-800" id="welcome-name-guru"></h3>
+                    <p class="text-green-700">Siapkan materi dan kelola tugas untuk kelas Anda.</p>
+                </div>
+            </div>
+             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
+                <h2 class="text-xl font-semibold">Daftar Kelas Anda</h2>
+                <div class="flex-shrink-0 w-full sm:w-auto flex flex-col sm:flex-row gap-2">
+                    <button onclick="navigate(showMaterialList)" class="w-full sm:w-auto bg-white border border-green-600 text-green-600 font-semibold py-2 px-4 rounded-lg hover:bg-green-50 flex items-center justify-center space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34"></path><polygon points="18 2 22 6 12 16 8 16 8 12 18 2"></polygon></svg>
+                        <span>Manajemen Materi</span>
+                    </button>
+                    <button onclick="navigate(showAssignmentList)" class="w-full sm:w-auto bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 flex items-center justify-center space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        <span>Manajemen Tugas</span>
+                    </button>
+                </div>
+            </div>
+            <div id="class-list" class="space-y-3"></div>
+        </div>
+    </template>
+    
+    <template id="orangtua-dashboard-template"><div class="fade-in"><div class="p-4 bg-purple-100 border border-purple-200 rounded-lg mb-6"><h3 class="font-bold text-purple-800" id="welcome-name-ortu"></h3><p class="text-purple-700">Lihat ringkasan aktivitas belajar anak Anda di sini.</p></div><div class="bg-white p-6 rounded-lg shadow-md"><h3 class="text-lg font-semibold mb-4">Ringkasan Minggu Ini</h3><div class="space-y-4"><div><div class="flex justify-between items-center mb-1"><span class="font-medium">Kehadiran</span><span class="font-bold text-green-600">100%</span></div><div class="w-full bg-gray-200 rounded-full h-2.5"><div class="bg-green-500 h-2.5 rounded-full" style="width: 100%"></div></div></div><div><div class="flex justify-between items-center mb-1"><span class="font-medium">Tugas Selesai</span><span class="font-bold text-blue-600">4 dari 5</span></div><div class="w-full bg-gray-200 rounded-full h-2.5"><div class="bg-blue-500 h-2.5 rounded-full" style="width: 80%"></div></div></div><div class="pt-2"><p class="text-sm text-gray-600">Nilai Kuis Terakhir (Matematika):</p><p class="text-2xl font-bold text-gray-800">85</p></div></div><button onclick="navigate(showParentReport)" class="w-full mt-6 bg-purple-600 text-white font-semibold py-3 rounded-lg hover:bg-purple-700 transition-all">Lihat Laporan Lengkap</button></div></div></template>
+    
+    <!-- Masyarakat Umum Dashboard -->
+    <template id="umum-dashboard-template">
+        <div class="fade-in">
+            <div class="p-5 bg-indigo-100 border border-indigo-200 rounded-lg mb-6">
+                <h3 class="font-bold text-indigo-800" id="welcome-name"></h3>
+                <p class="text-indigo-700">Saatnya belajar hal baru dan tingkatkan keterampilan Anda!</p>
+            </div>
+            
+            <!-- NEW: User's Course Progress Section -->
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold mb-4">Kursus Saya</h2>
+                <div class="bg-white p-6 rounded-lg shadow-md space-y-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Sedang Dipelajari</h3>
+                        <div id="courses-in-progress" class="space-y-3">
+                            <!-- In-progress courses will be populated here -->
+                        </div>
+                    </div>
+                     <div class="border-t pt-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Telah Selesai</h3>
+                        <div id="courses-completed" class="space-y-3">
+                            <!-- Completed courses will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="text-xl font-semibold mb-4">Jelajahi Kursus Lainnya</h2>
+            <div id="category-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+        </div>
+    </template>
+
+    <template id="list-template"><div class="fade-in"><div class="bg-white p-6 rounded-lg shadow-md"><h2 class="text-2xl font-bold mb-4" id="list-title"></h2><p class="text-gray-500 mb-6" id="list-subtitle"></p><div id="list-container" class="space-y-4"></div></div></div></template>
+    <template id="materi-template"><div class="fade-in"><div class="bg-white p-6 rounded-lg shadow-md"><h2 class="text-2xl font-bold mb-2" id="materi-title"></h2><p class="text-gray-500 mb-6" id="materi-subtitle"></p><img id="materi-image" src="" alt="Ilustrasi Materi" class="w-full h-auto rounded-lg mb-6"><div id="materi-content" class="prose max-w-none text-gray-700 leading-relaxed"></div><div id="materi-actions" class="mt-6"></div></div></div></template>
+    <template id="student-list-template"><div class="fade-in"><div class="bg-white p-6 rounded-lg shadow-md"><h2 class="text-2xl font-bold mb-4" id="class-title"></h2><p class="text-gray-500 mb-6">Daftar siswa di kelas ini. Klik untuk input nilai.</p><div id="student-list-container" class="divide-y divide-gray-200"></div></div></div></template>
+    <template id="parent-report-template"><div class="fade-in"><div class="bg-white p-6 rounded-lg shadow-md"><h2 class="text-2xl font-bold mb-4">Laporan Akademik Lengkap</h2><p class="text-gray-500 mb-6" id="report-student-name"></p><div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mata Pelajaran</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tugas</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UTS</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UAS</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rata-rata</th></tr></thead><tbody id="report-table-body" class="bg-white divide-y divide-gray-200"></tbody></table></div></div></div></template>
+    <template id="kuis-template"><div class="fade-in"><div class="bg-white p-6 rounded-lg shadow-md"><h2 class="text-2xl font-bold mb-4" id="quiz-title">Kuis</h2><div class="space-y-6" id="quiz-container"></div><button onclick="submitQuiz()" class="mt-8 w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition-all">Kirim Jawaban</button></div><div id="result-modal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"><div class="modal-content bg-white rounded-lg shadow-xl p-8 text-center max-w-sm mx-auto"><h3 class="text-2xl font-bold mb-2">Hasil Kuis</h3><p id="quiz-score" class="text-4xl font-bold text-blue-600 my-4"></p><p id="quiz-feedback" class="text-gray-600 mb-6"></p><button onclick="closeModal('result-modal')" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg">Tutup</button></div></div></div></template>
+    <template id="assignment-list-template"><div class="fade-in"><div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3"><h2 class="text-2xl font-bold">Manajemen Tugas</h2><button onclick="navigate(showCreateAssignmentForm)" class="w-full sm:w-auto bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 flex items-center justify-center space-x-2"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg><span>Buat Tugas Baru</span></button></div><div id="assignment-list-guru" class="bg-white p-6 rounded-lg shadow-md space-y-4"></div></div></template>
+    <template id="create-assignment-template"><div class="fade-in"><h2 class="text-2xl font-bold mb-4">Buat Tugas Baru</h2><div class="bg-white p-6 md:p-8 rounded-lg shadow-md"><form id="create-assignment-form" class="space-y-4"><div><label for="assignment-title" class="block text-sm font-medium text-gray-700">Judul Tugas</label><input type="text" id="assignment-title" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500" required></div><div><label for="assignment-class" class="block text-sm font-medium text-gray-700">Untuk Kelas</label><select id="assignment-class" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500" required></select></div><div><label for="assignment-instructions" class="block text-sm font-medium text-gray-700">Instruksi</label><textarea id="assignment-instructions" rows="4" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500" required></textarea></div><div><label for="assignment-duedate" class="block text-sm font-medium text-gray-700">Tanggal Tenggat</label><input type="date" id="assignment-duedate" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500" required></div><div class="flex justify-end space-x-3 pt-4"><button type="button" onclick="goBack()" class="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300">Batal</button><button type="submit" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700">Simpan Tugas</button></div></form></div></div></template>
+    <template id="assignment-detail-template"><div class="fade-in"><h2 class="text-2xl md:text-3xl font-bold mb-4" id="assignment-detail-title"></h2><div class="bg-white p-6 md:p-8 rounded-lg shadow-md"><div class="mb-6 pb-4 border-b"><h3 class="text-lg font-semibold">Instruksi</h3><p class="text-gray-600 mt-2" id="assignment-detail-instructions"></p><p class="text-sm text-red-600 font-medium mt-4">Tenggat: <span id="assignment-detail-duedate"></span></p></div><form id="submit-assignment-form"><div><label for="assignment-answer" class="block text-sm font-medium text-gray-700 mb-2">Jawaban Anda</label><textarea id="assignment-answer" rows="8" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Ketik jawaban Anda di sini..."></textarea></div><div class="flex justify-end pt-4"><button type="submit" class="bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-700">Kumpulkan Tugas</button></div></form></div></div></template>
+    
+    <!-- MATERIAL MANAGEMENT TEMPLATES -->
+    <template id="material-list-template">
+        <div class="fade-in">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
+                <h2 class="text-2xl font-bold">Manajemen Materi</h2>
+                <button onclick="navigate(showCreateMaterialForm)" class="w-full sm:w-auto bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 flex items-center justify-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    <span>Buat Materi Baru</span>
+                </button>
+            </div>
+            <div id="material-list-guru" class="bg-white p-6 rounded-lg shadow-md space-y-4"></div>
+        </div>
+    </template>
+    <template id="create-material-template">
+         <div class="fade-in">
+             <h2 class="text-2xl font-bold mb-4">Buat Materi Baru</h2>
+             <div class="bg-white p-6 md:p-8 rounded-lg shadow-md">
+                 <form id="create-material-form" class="space-y-4">
+                     <div>
+                        <label for="material-subject" class="block text-sm font-medium text-gray-700">Mata Pelajaran</label>
+                        <select id="material-subject" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500" required></select>
+                     </div>
+                     <div>
+                        <label for="material-title" class="block text-sm font-medium text-gray-700">Judul Materi/Bab</label>
+                        <input type="text" id="material-title" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                     </div>
+                     <div>
+                        <label for="material-subtitle" class="block text-sm font-medium text-gray-700">Subjudul (Opsional)</label>
+                        <input type="text" id="material-subtitle" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                     </div>
+                     <div>
+                        <label for="material-content" class="block text-sm font-medium text-gray-700">Isi Materi</label>
+                        <textarea id="material-content" rows="6" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500" required></textarea>
+                     </div>
+                     <div class="flex justify-end space-x-3 pt-4">
+                        <button type="button" onclick="goBack()" class="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300">Batal</button>
+                        <button type="submit" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700">Simpan Materi</button>
+                     </div>
+                 </form>
+             </div>
+        </div>
+    </template>
+
+    <script>
+        const MOCK_DATA = {
+            users: {
+                "budi.s": { role: 'siswa', name: 'Budi Sanjaya', id: 101, classId: '7a' },
+                "siti.a": { role: 'siswa', name: 'Siti Aminah', id: 102, classId: '7a' },
+                "anisa.p": { role: 'guru', name: 'Anisa Putri, S.Pd.', id: 201 },
+                "ayah.budi": { role: 'orangtua', name: 'Bapak Abdullah (Ayah Budi)', studentId: 101, studentName: 'Budi Sanjaya' },
+                "warga.jaya": { role: 'umum', name: 'Jaya Perkasa', id: 301 }
+            },
+            subjects: [
+                { id: 'ipa', name: "Ilmu Pengetahuan Alam", icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-500"><path d="M11 18.572c-4.142 0-7.5-3.358-7.5-7.5s3.358-7.5 7.5-7.5 7.5 3.358 7.5 7.5-3.358 7.5-7.5 7.5zM22 22l-4-4" /></svg>' },
+                { id: 'mat', name: "Matematika", icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500"><path d="M12 5V19M5 12H19" /></svg>' },
+            ],
+            modules: {
+                'ipa': [
+                    { id: 'ipa-1', title: 'Ekosistem', subtitle: 'Bab 1: Komponen Ekosistem', content: 'Ekosistem adalah suatu sistem ekologi yang terbentuk oleh hubungan timbal balik tak terpisahkan antara makhluk hidup dengan lingkungannya.', image: 'https://placehold.co/800x400/a7f3d0/166534?text=Ekosistem', quizId: 'quiz-ipa-1' },
+                    { id: 'ipa-2', title: 'Rantai Makanan', subtitle: 'Bab 2: Aliran Energi', content: 'Rantai makanan adalah perjalanan makan dan dimakan dengan urutan tertentu antar makhluk hidup.', image: 'https://placehold.co/800x400/dbeafe/1e40af?text=Rantai+Makanan', quizId: null }
+                ],
+                'mat': [
+                    { id: 'mat-1', title: 'Aljabar', subtitle: 'Bab 1: Pengenalan Variabel', content: 'Aljabar adalah cabang matematika yang mempelajari simbol matematika dan aturan untuk memanipulasi simbol-simbol ini.', image: 'https://placehold.co/800x400/e0e7ff/312e81?text=Aljabar', quizId: null }
+                ]
+            },
+            quizzes: {
+                'quiz-ipa-1': {
+                    title: "Kuis Ekosistem",
+                    questions: [
+                        { question: "Manakah yang termasuk komponen ABIOTIK?", options: ["Pohon", "Ikan", "Air", "Burung"], answer: "Air" },
+                        { question: "Hubungan timbal balik antara makhluk hidup dan lingkungannya disebut...", options: ["Simbiosis", "Ekosistem", "Rantai Makanan", "Populasi"], answer: "Ekosistem" }
+                    ]
+                }
+            },
+            classes: [
+                { id: '7a', name: "Kelas 7A", teacherId: 201, studentIds: [101, 102] },
+                { id: '7b', name: "Kelas 7B", teacherId: 201, studentIds: [] }
+            ],
+            grades: {
+                101: { 
+                    'ipa': { tugas: 85, uts: 88, uas: 90 },
+                    'mat': { tugas: 92, uts: 85, uas: 87 }
+                },
+                102: { 
+                    'ipa': { tugas: 80, uts: 82, uas: 85 },
+                }
+            },
+            leaderboard: [
+                { name: 'Siti Aminah', score: 2450, avatar: 'SA'},
+                { name: 'Budi Sanjaya', score: 2300, avatar: 'BS'},
+                { name: 'Eko Widodo', score: 2100, avatar: 'EW'},
+            ],
+            courseCategories: [
+                { id: 'digital', name: 'Keterampilan Digital', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-sky-500"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>' },
+                { id: 'usaha', name: 'Wirausaha', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500"><line x1="12" x2="12" y1="1" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>' },
+            ],
+            courses: {
+                'digital': [
+                    { id: 'dig-1', title: 'Dasar Pemasaran Digital', content: 'Belajar cara memasarkan produk Anda secara online melalui media sosial dan mesin pencari.', image: 'https://placehold.co/800x400/0ea5e9/ffffff?text=Pemasaran+Digital' },
+                ],
+                'usaha': [
+                     { id: 'us-1', title: 'Manajemen Keuangan UMKM', content: 'Cara mengatur arus kas, membuat anggaran, dan laporan keuangan sederhana untuk usaha kecil.', image: 'https://placehold.co/800x400/f59e0b/ffffff?text=Keuangan+UMKM' }
+                ]
+            },
+            assignments: [
+                { id: 1, teacherId: 201, classId: '7a', title: 'Rangkuman Bab Ekosistem', instructions: 'Buatlah rangkuman dari Bab 1 tentang Komponen Ekosistem. Tuliskan dalam 3 paragraf.', dueDate: '2025-06-15', submitted: false }
+            ],
+            userProgress: {
+                '301': { // warga.jaya's ID
+                    inProgress: ['dig-1'],
+                    completed: ['us-1']
+                }
+            }
+        };
+
+        // --- STATE MANAGEMENT ---
+        let currentUser = null;
+        let navigationStack = [];
+        let currentQuizId = null;
+
+        // --- DOM ELEMENTS ---
+        const loginScreen = document.getElementById('login-screen');
+        const appScreen = document.getElementById('app-screen');
+        const mainContent = document.getElementById('main-content');
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+        const appTitle = document.getElementById('app-title');
+        const userName = document.getElementById('user-name');
+        
+        // --- EVENT LISTENERS ---
+        loginForm.addEventListener('submit', handleLogin);
+        
+        // --- CORE FUNCTIONS ---
+        function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const user = MOCK_DATA.users[username];
+            
+            if (user) {
+                currentUser = user;
+                loginError.classList.add('hidden');
+                loginScreen.classList.remove('active');
+                appScreen.classList.add('active');
+                // Initialize stack with the dashboard as the first and only state
+                navigationStack = [{ action: renderDashboard, payload: user }];
+                renderDashboard(user);
+            } else {
+                loginError.classList.remove('hidden');
+            }
+        }
+        
+        function logout() {
+            currentUser = null;
+            appScreen.classList.remove('active');
+            loginScreen.classList.add('active');
+            mainContent.innerHTML = '';
+            document.getElementById('username').value = '';
+        }
+        
+        function goBack() {
+            if (navigationStack.length > 1) {
+                navigationStack.pop(); // Remove current state from stack
+                const previousState = navigationStack[navigationStack.length - 1];
+                previousState.action(previousState.payload); // Render the previous state
+            }
+        }
+
+        // Helper function to handle navigation
+        function navigate(action, payload) {
+            navigationStack.push({ action, payload }); // Add new state to stack
+            action(payload); // Execute the action to render the new view
+        }
+        
+        function renderView(templateId) {
+            const template = document.getElementById(templateId);
+            mainContent.innerHTML = '';
+            mainContent.appendChild(template.content.cloneNode(true));
+        }
+
+        function createBackButton() {
+            const backButtonTemplate = document.getElementById('back-button-template');
+            return backButtonTemplate.content.cloneNode(true);
+        }
+
+        // --- RENDER FUNCTIONS ---
+        function renderDashboard(user) {
+            let templateId, title, welcomeId, welcomeText;
+            switch(user.role) {
+                case 'siswa':
+                    templateId = 'siswa-dashboard-template';
+                    title = 'Dashboard Siswa';
+                    welcomeId = 'welcome-name-siswa';
+                    welcomeText = `Selamat Datang, ${user.name}!`;
+                    break;
+                case 'guru':
+                    templateId = 'guru-dashboard-template';
+                    title = 'Dashboard Guru';
+                    welcomeId = 'welcome-name-guru';
+                    welcomeText = `Halo, ${user.name}!`;
+                    break;
+                case 'orangtua':
+                    templateId = 'orangtua-dashboard-template';
+                    title = 'Dashboard Orang Tua';
+                    welcomeId = 'welcome-name-ortu';
+                    welcomeText = `Pantau Perkembangan ${MOCK_DATA.users['budi.s'].name}`;
+                    break;
+                case 'umum':
+                    templateId = 'umum-dashboard-template';
+                    title = 'Pusat Belajar';
+                    welcomeId = 'welcome-name';
+                    welcomeText = `Halo, ${user.name}!`;
+                    break;
+            }
+            userName.textContent = user.name;
+            appTitle.textContent = title;
+            renderView(templateId);
+            document.getElementById(welcomeId).textContent = welcomeText;
+            if (user.role === 'siswa') { populateSubjects(); populateLeaderboard(); populateStudentAssignments(user.classId); }
+            if (user.role === 'guru') { populateClasses(user.id); }
+            if (user.role === 'umum') { populateCategories(); populateUserCourses(user.id); }
+        }
+        
+        // --- SISWA FLOW ---
+        function populateStudentAssignments(classId) {
+            const container = document.getElementById('assignment-list-siswa');
+            const studentAssignments = MOCK_DATA.assignments.filter(a => a.classId === classId);
+            if (studentAssignments.length > 0) {
+                container.innerHTML = '';
+                studentAssignments.forEach(assignment => {
+                    const item = document.createElement('button');
+                    item.className = 'w-full text-left bg-white p-4 rounded-lg shadow-sm border-l-4 transition-all hover:shadow-md';
+                    item.onclick = () => navigate(showAssignmentDetail, assignment.id);
+                    if(assignment.submitted) {
+                        item.classList.add('border-green-500');
+                        item.innerHTML = `<div class="flex justify-between items-center"><h4 class="font-semibold text-gray-500">${assignment.title}</h4><span class="text-xs font-medium text-white bg-green-500 py-1 px-2 rounded-full">Terkumpul</span></div><p class="text-sm text-gray-400 mt-1">Tenggat: ${assignment.dueDate}</p>`;
+                    } else {
+                        item.classList.add('border-blue-500');
+                        item.innerHTML = `<div class="flex justify-between items-center"><h4 class="font-semibold text-gray-800">${assignment.title}</h4><span class="text-xs font-medium text-white bg-blue-500 py-1 px-2 rounded-full">Baru</span></div><p class="text-sm text-gray-500 mt-1">Tenggat: ${assignment.dueDate}</p>`;
+                    }
+                    container.appendChild(item);
+                });
+            }
+        }
+        function showAssignmentDetail(assignmentId) {
+            renderView('assignment-detail-template');
+            mainContent.firstElementChild.prepend(createBackButton());
+            const assignment = MOCK_DATA.assignments.find(a => a.id === assignmentId);
+            document.getElementById('assignment-detail-title').textContent = assignment.title;
+            document.getElementById('assignment-detail-instructions').textContent = assignment.instructions;
+            document.getElementById('assignment-detail-duedate').textContent = assignment.dueDate;
+            const form = document.getElementById('submit-assignment-form');
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                handleAssignmentSubmission(assignment.id);
+            });
+            if (assignment.submitted) {
+                document.getElementById('assignment-answer').value = "Jawaban sudah dikumpulkan sebelumnya.";
+                document.getElementById('assignment-answer').disabled = true;
+                form.querySelector('button').disabled = true;
+                form.querySelector('button').textContent = "Sudah Terkumpul";
+                form.querySelector('button').classList.add('bg-gray-400', 'cursor-not-allowed');
+                form.querySelector('button').classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            }
+        }
+        function handleAssignmentSubmission(assignmentId) {
+            const answer = document.getElementById('assignment-answer').value;
+            if (!answer.trim()) {
+                alert("Jawaban tidak boleh kosong!");
+                return;
+            }
+            const assignment = MOCK_DATA.assignments.find(a => a.id === assignmentId);
+            assignment.submitted = true;
+            alert("Tugas berhasil dikumpulkan!");
+            goBack();
+        }
+        function populateSubjects() {
+            const list = document.getElementById('subject-list');
+            list.innerHTML = '';
+            MOCK_DATA.subjects.forEach(subject => {
+                const card = document.createElement('div');
+                card.className = 'bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer';
+                card.onclick = () => navigate(showModuleList, subject.id);
+                card.innerHTML = `<div class="flex items-center space-x-4">${subject.icon}<div class="flex-1"><h4 class="font-semibold text-gray-800">${subject.name}</h4></div></div>`;
+                list.appendChild(card);
+            });
+        }
+        function populateLeaderboard() {
+            const list = document.getElementById('leaderboard');
+            list.innerHTML = '';
+            MOCK_DATA.leaderboard.forEach((player, index) => {
+                const item = document.createElement('div');
+                const isCurrentUser = player.name === currentUser.name;
+                item.className = `flex items-center justify-between p-2 rounded-md ${isCurrentUser ? 'bg-blue-100' : ''}`;
+                item.innerHTML = `<div class="flex items-center space-x-3"><span class="font-bold text-gray-400 w-5">${index + 1}</span><div class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-bold text-sm">${player.avatar}</div><span class="font-medium ${isCurrentUser ? 'text-blue-800' : ''}">${player.name}</span></div><span class="font-bold text-yellow-600">${player.score} XP</span>`;
+                list.appendChild(item);
+            });
+        }
+        function showModuleList(subjectId) {
+            renderView('list-template');
+            mainContent.firstElementChild.prepend(createBackButton());
+            const subject = MOCK_DATA.subjects.find(s => s.id === subjectId);
+            document.getElementById('list-title').textContent = subject.name;
+            document.getElementById('list-subtitle').textContent = 'Silakan pilih bab yang ingin dipelajari.';
+            const container = document.getElementById('list-container');
+            container.innerHTML = '';
+            const modules = MOCK_DATA.modules[subjectId] || [];
+            modules.forEach(module => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer';
+                item.onclick = () => navigate(showModule, {subjectId: subjectId, moduleId: module.id});
+                item.innerHTML = `<div><h4 class="font-semibold">${module.title}</h4><p class="text-sm text-gray-500">${module.subtitle}</p></div><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>`;
+                container.appendChild(item);
+            });
+        }
+        function showModule(payload) {
+            const { subjectId, moduleId } = payload;
+            renderView('materi-template');
+            mainContent.firstElementChild.prepend(createBackButton());
+            const module = MOCK_DATA.modules[subjectId].find(m => m.id === moduleId);
+            document.getElementById('materi-title').textContent = module.title;
+            document.getElementById('materi-subtitle').textContent = module.subtitle;
+            document.getElementById('materi-image').src = module.image;
+            document.getElementById('materi-content').innerHTML = `<p>${module.content}</p>`;
+            const actionsContainer = document.getElementById('materi-actions');
+            actionsContainer.innerHTML = '';
+            if (module.quizId) {
+                const quizButton = document.createElement('button');
+                quizButton.className = 'w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-all flex items-center justify-center space-x-2';
+                quizButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14.5 2.5 5 5L7 20H3v-4L14.5 2.5z"/></svg><span>Kerjakan Kuis</span>`;
+                quizButton.onclick = () => navigate(showQuiz, module.quizId);
+                actionsContainer.appendChild(quizButton);
+            }
+        }
+
+        // --- GURU FLOW ---
+        function populateClasses(teacherId) {
+            const list = document.getElementById('class-list');
+            list.innerHTML = '';
+            MOCK_DATA.classes.filter(c => c.teacherId === teacherId).forEach(cls => {
+                const item = document.createElement('div');
+                item.className = 'bg-white p-4 rounded-lg shadow-sm flex justify-between items-center hover:bg-gray-50 cursor-pointer';
+                item.onclick = () => navigate(showStudentList, cls.id);
+                item.innerHTML = `<div><h4 class="font-semibold">${cls.name}</h4><p class="text-sm text-gray-500">${cls.studentIds.length} siswa</p></div><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>`;
+                list.appendChild(item);
+            });
+        }
+        function showStudentList(classId) {
+            renderView('student-list-template');
+            mainContent.firstElementChild.prepend(createBackButton());
+            const aClass = MOCK_DATA.classes.find(c => c.id === classId);
+            document.getElementById('class-title').textContent = `Daftar Siswa - ${aClass.name}`;
+            const container = document.getElementById('student-list-container');
+            container.innerHTML = '';
+            aClass.studentIds.forEach(studentId => {
+                const student = Object.values(MOCK_DATA.users).find(u => u.id === studentId);
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between p-4 hover:bg-gray-50';
+                item.innerHTML = `<span class="font-medium">${student.name}</span><button onclick="openGradeModal('${studentId}')" class="bg-green-100 text-green-700 font-semibold text-sm py-1 px-3 rounded-full hover:bg-green-200">Input Nilai</button>`;
+                container.appendChild(item);
+            });
+        }
+        function openGradeModal(studentId) {
+            const student = Object.values(MOCK_DATA.users).find(u => u.id === parseInt(studentId));
+            const template = document.getElementById('grade-modal-template');
+            document.getElementById('modal-container').innerHTML = '';
+            document.getElementById('modal-container').appendChild(template.content.cloneNode(true));
+            document.getElementById('modal-student-name').textContent = `Input Nilai untuk ${student.name}`;
+            const modal = document.getElementById('grade-modal');
+            modal.querySelector('#grade-form').onsubmit = (e) => { e.preventDefault(); closeModal('grade-modal'); };
+            openModal('grade-modal');
+        }
+        function showAssignmentList() {
+            renderView('assignment-list-template');
+            mainContent.firstElementChild.prepend(createBackButton());
+            const container = document.getElementById('assignment-list-guru');
+            const teacherAssignments = MOCK_DATA.assignments.filter(a => a.teacherId === currentUser.id);
+            if (teacherAssignments.length > 0) {
+                container.innerHTML = '';
+                teacherAssignments.forEach(assignment => {
+                    const className = MOCK_DATA.classes.find(c => c.id === assignment.classId).name;
+                    const item = document.createElement('div');
+                    item.className = 'p-4 border rounded-md';
+                    item.innerHTML = `<p class="font-semibold">${assignment.title}</p><p class="text-sm text-gray-600">Kelas: ${className} | Tenggat: ${assignment.dueDate}</p>`;
+                    container.appendChild(item);
+                });
+            } else {
+                container.innerHTML = `<p class="text-gray-500">Belum ada tugas yang dibuat.</p>`;
+            }
+        }
+        function showCreateAssignmentForm() {
+            renderView('create-assignment-template');
+            mainContent.firstElementChild.prepend(createBackButton());
+            const classDropdown = document.getElementById('assignment-class');
+            classDropdown.innerHTML = '';
+            MOCK_DATA.classes.filter(c => c.teacherId === currentUser.id).forEach(c => {
+                const option = document.createElement('option');
+                option.value = c.id;
+                option.textContent = c.name;
+                classDropdown.appendChild(option);
+            });
+            document.getElementById('create-assignment-form').addEventListener('submit', handleSaveAssignment);
+        }
+        function handleSaveAssignment(e) {
+            e.preventDefault();
+            const newAssignment = {
+                id: MOCK_DATA.assignments.length + 1,
+                teacherId: currentUser.id,
+                title: document.getElementById('assignment-title').value,
+                classId: document.getElementById('assignment-class').value,
+                instructions: document.getElementById('assignment-instructions').value,
+                dueDate: document.getElementById('assignment-duedate').value,
+                submitted: false
+            };
+            MOCK_DATA.assignments.push(newAssignment);
+            alert('Tugas berhasil disimpan!');
+            goBack();
+        }
+        function showMaterialList() {
+            renderView('material-list-template');
+            mainContent.firstElementChild.prepend(createBackButton());
+            const container = document.getElementById('material-list-guru');
+            const teacherSubjects = MOCK_DATA.subjects;
+            container.innerHTML = '';
+            teacherSubjects.forEach(subject => {
+                const subjectModules = MOCK_DATA.modules[subject.id] || [];
+                const subjectDiv = document.createElement('div');
+                subjectDiv.innerHTML = `<h3 class="font-bold text-lg mb-2">${subject.name}</h3>`;
+                const list = document.createElement('div');
+                list.className = 'space-y-2 pl-4 border-l-2';
+                if(subjectModules.length > 0) {
+                    subjectModules.forEach(module => {
+                        const item = document.createElement('div');
+                        item.className = 'p-2 border rounded-md text-sm';
+                        item.textContent = module.title;
+                        list.appendChild(item);
+                    });
+                } else {
+                    list.innerHTML = `<p class="text-gray-500 text-sm">Belum ada materi untuk mata pelajaran ini.</p>`;
+                }
+                subjectDiv.appendChild(list);
+                container.appendChild(subjectDiv);
+            });
+        }
+        function showCreateMaterialForm() {
+            renderView('create-material-template');
+            mainContent.firstElementChild.prepend(createBackButton());
+            const subjectDropdown = document.getElementById('material-subject');
+            subjectDropdown.innerHTML = '';
+            MOCK_DATA.subjects.forEach(s => {
+                const option = document.createElement('option');
+                option.value = s.id;
+                option.textContent = s.name;
+                subjectDropdown.appendChild(option);
+            });
+            document.getElementById('create-material-form').addEventListener('submit', handleSaveMaterial);
+        }
+        function handleSaveMaterial(e) {
+            e.preventDefault();
+            const subjectId = document.getElementById('material-subject').value;
+            const newModule = {
+                id: `${subjectId}-${MOCK_DATA.modules[subjectId].length + 1}`,
+                title: document.getElementById('material-title').value,
+                subtitle: document.getElementById('material-subtitle').value,
+                content: document.getElementById('material-content').value,
+                image: 'https://placehold.co/800x400/eeeeee/31343C?text=Materi+Baru',
+                quizId: null
+            };
+            MOCK_DATA.modules[subjectId].push(newModule);
+            alert('Materi berhasil disimpan!');
+            goBack();
+        }
+
+        // --- ORANG TUA FLOW ---
+        function showParentReport() {
+            renderView('parent-report-template');
+            mainContent.firstElementChild.prepend(createBackButton());
+            document.getElementById('report-student-name').textContent = `Siswa: ${currentUser.studentName}`;
+            const studentGrades = MOCK_DATA.grades[currentUser.studentId];
+            const tbody = document.getElementById('report-table-body');
+            tbody.innerHTML = '';
+            for (const subjectId in studentGrades) {
+                const gradeData = studentGrades[subjectId];
+                const subject = MOCK_DATA.subjects.find(s => s.id === subjectId);
+                const avg = Math.round((gradeData.tugas + gradeData.uts + gradeData.uas) / 3);
+                const row = document.createElement('tr');
+                row.innerHTML = `<td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">${subject.name}</td><td class="px-6 py-4 whitespace-nowrap text-gray-500">${gradeData.tugas}</td><td class="px-6 py-4 whitespace-nowrap text-gray-500">${gradeData.uts}</td><td class="px-6 py-4 whitespace-nowrap text-gray-500">${gradeData.uas}</td><td class="px-6 py-4 whitespace-nowrap font-semibold text-gray-800">${avg}</td>`;
+                tbody.appendChild(row);
+            }
+        }
+        
+        // --- MASYARAKAT UMUM FLOW ---
+        function populateCategories() {
+            const list = document.getElementById('category-list');
+            list.innerHTML = '';
+            MOCK_DATA.courseCategories.forEach(cat => {
+                const card = document.createElement('div');
+                card.className = 'bg-white p-5 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer flex flex-col items-center text-center';
+                card.onclick = () => navigate(showCourseList, cat.id);
+                card.innerHTML = `<div class="mb-3">${cat.icon}</div><h4 class="font-semibold text-gray-800">${cat.name}</h4>`;
+                list.appendChild(card);
+            });
+        }
+        function populateUserCourses(userId) {
+            const progressContainer = document.getElementById('courses-in-progress');
+            const completedContainer = document.getElementById('courses-completed');
+            progressContainer.innerHTML = '';
+            completedContainer.innerHTML = '';
+
+            const userProgress = MOCK_DATA.userProgress[userId];
+            if (!userProgress) {
+                progressContainer.innerHTML = `<p class="text-gray-500">Anda belum memulai kursus apapun.</p>`;
+                completedContainer.innerHTML = `<p class="text-gray-500">Belum ada kursus yang selesai.</p>`;
+                return;
+            }
+
+            // Populate In-Progress Courses
+            if (userProgress.inProgress && userProgress.inProgress.length > 0) {
+                userProgress.inProgress.forEach(courseId => {
+                    const [catId, _] = courseId.split('-');
+                    const course = MOCK_DATA.courses[catId]?.find(c => c.id === courseId);
+                    if (course) {
+                        const item = document.createElement('button');
+                        item.className = 'w-full text-left p-4 bg-gray-50 rounded-lg hover:bg-gray-100 flex items-center justify-between';
+                        item.onclick = () => navigate(showCourse, {categoryId: catId, courseId: course.id});
+                        item.innerHTML = `<span class="font-semibold text-gray-800">${course.title}</span><span class="text-xs font-medium bg-yellow-100 text-yellow-800 py-1 px-2 rounded-full">Lanjutkan</span>`;
+                        progressContainer.appendChild(item);
+                    }
+                });
+            } else {
+                progressContainer.innerHTML = `<p class="text-gray-500">Semua kursus sudah selesai!</p>`;
+            }
+
+            // Populate Completed Courses
+            if (userProgress.completed && userProgress.completed.length > 0) {
+                 userProgress.completed.forEach(courseId => {
+                    const [catId, _] = courseId.split('-');
+                    const course = MOCK_DATA.courses[catId]?.find(c => c.id === courseId);
+                    if (course) {
+                        const item = document.createElement('div');
+                        item.className = 'w-full text-left p-4 bg-green-50 rounded-lg flex items-center justify-between border-l-4 border-green-500';
+                        item.innerHTML = `<span class="font-semibold text-green-800">${course.title}</span><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-green-600"><path d="M20 6 9 17l-5-5"></path></svg>`;
+                        completedContainer.appendChild(item);
+                    }
+                });
+            } else {
+                 completedContainer.innerHTML = `<p class="text-gray-500">Belum ada kursus yang selesai.</p>`;
+            }
+        }
+        function showCourseList(categoryId) {
+            renderView('list-template');
+            mainContent.firstElementChild.prepend(createBackButton());
+            const category = MOCK_DATA.courseCategories.find(c => c.id === categoryId);
+            document.getElementById('list-title').textContent = category.name;
+            document.getElementById('list-subtitle').textContent = 'Pilih kursus singkat yang ingin Anda ikuti.';
+            const container = document.getElementById('list-container');
+            container.innerHTML = '';
+            const courses = MOCK_DATA.courses[categoryId] || [];
+            courses.forEach(course => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer';
+                item.onclick = () => navigate(showCourse, {categoryId: categoryId, courseId: course.id});
+                item.innerHTML = `<span class="font-semibold">${course.title}</span><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>`;
+                container.appendChild(item);
+            });
+        }
+        function showCourse(payload) {
+            const { categoryId, courseId } = payload;
+            renderView('materi-template');
+            mainContent.firstElementChild.prepend(createBackButton());
+            const course = MOCK_DATA.courses[categoryId].find(c => c.id === courseId);
+            document.getElementById('materi-title').textContent = course.title;
+            document.getElementById('materi-subtitle').innerHTML = `<strong>Kursus Singkat</strong>`;
+            document.getElementById('materi-image').src = course.image;
+            document.getElementById('materi-content').innerHTML = `<p>${course.content}</p>`;
+            const actionsContainer = document.getElementById('materi-actions');
+            actionsContainer.innerHTML = '';
+            const completionButton = document.createElement('button');
+            completionButton.className = 'w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 transition-all flex items-center justify-center space-x-2';
+            completionButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Tandai Selesai</span>`;
+            completionButton.onclick = () => handleCourseCompletion(course.id);
+            actionsContainer.appendChild(completionButton);
+        }
+        function handleCourseCompletion(courseId) {
+            const userProgress = MOCK_DATA.userProgress[currentUser.id];
+            if (userProgress) {
+                // Remove from in-progress if it exists
+                const index = userProgress.inProgress.indexOf(courseId);
+                if (index > -1) {
+                    userProgress.inProgress.splice(index, 1);
+                }
+                // Add to completed if not already there
+                if (!userProgress.completed.includes(courseId)) {
+                    userProgress.completed.push(courseId);
+                }
+            }
+            const course = Object.values(MOCK_DATA.courses).flat().find(c => c.id === courseId);
+            alert(`Selamat, ${currentUser.name}! Anda telah menyelesaikan kursus "${course.title}".`);
+            goBack();
+        }
+
+        // --- COMMON MODAL & QUIZ LOGIC ---
+        function showQuiz(quizId) {
+            currentQuizId = quizId;
+            renderView('kuis-template');
+            mainContent.firstElementChild.prepend(createBackButton());
+            const quizData = MOCK_DATA.quizzes[quizId];
+            document.getElementById('quiz-title').textContent = quizData.title;
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = '';
+            quizData.questions.forEach((q, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.innerHTML = `<p class="font-semibold mb-3">${index + 1}. ${q.question}</p><div class="space-y-2">${q.options.map(opt => `<label class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-blue-50 cursor-pointer"><input type="radio" name="question${index}" value="${opt}" class="form-radio text-blue-600"><span>${opt}</span></label>`).join('')}</div>`;
+                container.appendChild(questionDiv);
+            });
+        }
+        function submitQuiz() {
+            let score = 0;
+            const quizData = MOCK_DATA.quizzes[currentQuizId];
+            quizData.questions.forEach((q, index) => {
+                const selected = document.querySelector(`input[name="question${index}"]:checked`);
+                if (selected && selected.value === q.answer) {
+                    score++;
+                }
+            });
+            const total = quizData.questions.length;
+            const percentage = Math.round((score / total) * 100);
+            document.getElementById('quiz-score').textContent = `${percentage}%`;
+            document.getElementById('quiz-feedback').textContent = `Kamu menjawab ${score} dari ${total} pertanyaan dengan benar.`;
+            openModal('result-modal');
+        }
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+                const modalContent = modal.querySelector('.modal-content');
+                if(modalContent) modalContent.classList.remove('-translate-y-10');
+            }, 10);
+        }
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (!modal) return;
+            modal.classList.add('opacity-0');
+            const modalContent = modal.querySelector('.modal-content');
+            if(modalContent) modalContent.classList.add('-translate-y-10');
+            setTimeout(() => {
+                modal.classList.add('hidden', 'pointer-events-none');
+                 if(modalId === 'result-modal') goBack();
+            }, 250);
+        }
+    </script>
+</body>
+</html>
